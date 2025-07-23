@@ -1,4 +1,8 @@
-
+body {
+    margin: 0;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+}
 
 .poster-row {
     display: flex;
@@ -300,7 +304,4 @@
         text-align: center;
     }
 
-    .iframe-player {
-        min-height: 200px;
-    }
 }

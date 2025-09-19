@@ -13,6 +13,7 @@
     #copyBtn { background: #38a169; margin-left: 10px; }
     #copyBtn:hover { background: #2f855a; }
     .btn-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+    .server-block { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 5px; }
   </style>
 </head>
 <body>
@@ -22,20 +23,8 @@
   <input type="text" id="thumb" placeholder="https://example.com/thumb.jpg">
 
   <h3>Servers</h3>
-  <label>Server 1 Name:</label>
-  <input type="text" id="server1name" placeholder="e.g. Youtube HD">
-  <label>Server 1 Embed URL:</label>
-  <input type="text" id="server1" placeholder="https://example.com/embed1">
-
-  <label>Server 2 Name:</label>
-  <input type="text" id="server2name" placeholder="e.g. Youtube 360p">
-  <label>Server 2 Embed URL:</label>
-  <input type="text" id="server2" placeholder="https://example.com/embed2">
-
-  <label>Server 3 Name:</label>
-  <input type="text" id="server3name" placeholder="e.g. Server 3">
-  <label>Server 3 Embed URL:</label>
-  <input type="text" id="server3" placeholder="https://example.com/embed3">
+  <div id="servers"></div>
+  <button type="button" onclick="addServer()">+ Add Server</button>
 
   <label>Download Link (optional):</label>
   <input type="text" id="download" placeholder="https://example.com/download OR #">
@@ -49,15 +38,44 @@
   <pre id="output"></pre>
 
   <script>
+    let serverCount = 0;
+
+    function addServer() {
+      serverCount++;
+      const serversDiv = document.getElementById("servers");
+
+      const block = document.createElement("div");
+      block.className = "server-block";
+      block.innerHTML = `
+        <label>Server ${serverCount} Name:</label>
+        <input type="text" id="serverName${serverCount}" placeholder="e.g. Server ${serverCount}">
+        <label>Server ${serverCount} Embed URL:</label>
+        <input type="text" id="serverUrl${serverCount}" placeholder="https://example.com/embed${serverCount}">
+      `;
+      serversDiv.appendChild(block);
+    }
+
     function generateCode() {
       const thumb = document.getElementById("thumb").value.trim();
-      const s1n = document.getElementById("server1name").value.trim() || "Server 1";
-      const s1 = document.getElementById("server1").value.trim();
-      const s2n = document.getElementById("server2name").value.trim() || "Server 2";
-      const s2 = document.getElementById("server2").value.trim();
-      const s3n = document.getElementById("server3name").value.trim() || "Server 3";
-      const s3 = document.getElementById("server3").value.trim();
       const download = document.getElementById("download").value.trim() || "#";
+
+      let options = `<option value="">Select Video Server</option>\n`;
+      let firstServerUrl = "";
+
+      for (let i = 1; i <= serverCount; i++) {
+        const name = document.getElementById("serverName" + i).value.trim() || `Server ${i}`;
+        const url = document.getElementById("serverUrl" + i).value.trim();
+        if (url) {
+          if (!firstServerUrl) firstServerUrl = url;
+          const defaultAttr = (i === 1) ? " id='servDefault'" : "";
+          options += `  <option${defaultAttr} value="${url}">${name}</option>\n`;
+        }
+      }
+
+      if (!firstServerUrl) {
+        alert("Please add at least one server with a valid embed URL.");
+        return;
+      }
 
       const code = `<div style="text-align: justify;">
 <!-- [Thumbnail] -->
@@ -70,16 +88,13 @@
 <div class="bixbox streaming">
 <div class="tvideo" id="plv">
 <div id="content">
-<iframe src="${s1}" frameborder="0" allowfullscreen="yes" width="100%" height="100%"></iframe>
+<iframe src="${firstServerUrl}" frameborder="0" allowfullscreen="yes" width="100%" height="100%"></iframe>
 </div>
 </div>
 <div class="item video-nav">
 <div class="mobius"> 
  <select id='selectServ' class="selectServ" onchange="loadMi(this)" name="selectServ">
-  <option value="">Select Video Server</option>
-  <option id='servDefault' value="${s1}">${s1n}</option>
-  <option value="${s2}">${s2n}</option>
-  <option value="${s3}">${s3n}</option>
+${options.trim()}
  </select>
 <div class="iconx">
 <a class="download" href="${download}"><div class="icol"><i class="fa fa-cloud-download" aria-hidden="true"></i> <span>Download</span></div></a>
@@ -105,6 +120,9 @@
         alert("Failed to copy. Please copy manually.");
       });
     }
+
+    // Add 1 server field by default
+    addServer();
   </script>
 </body>
 </html>

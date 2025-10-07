@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dailymotion Embed Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial, sans-serif; padding: 15px; background: #f5f5f5; }
+    .box { max-width: 500px; margin: auto; padding: 20px; background: #fff; border-radius: 12px; box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+    h2 { text-align: center; font-size: 20px; margin-bottom: 15px; }
+    input, button { width: 100%; padding: 14px; font-size: 16px; margin-top: 10px; border-radius: 8px; border: 1px solid #ccc; }
+    button { background: #ff5500; border: none; color: #fff; cursor: pointer; }
+    button:hover { background: #e64a00; }
+    #output { margin-top: 15px; padding: 12px; background: #f9f9f9; border-radius: 8px; word-break: break-all; }
+    #title { font-weight: bold; margin-top: 10px; }
+    .copy-btn { margin-top: 10px; background: #007bff; }
+    .copy-btn:hover { background: #0069d9; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Dailymotion Embed Generator</h2>
+    <input type="text" id="dailymotionLink" placeholder="Paste any Dailymotion video link">
+    <button onclick="generateEmbed()">Generate Embed Link</button>
+    <div id="output"></div>
+    <button class="copy-btn" onclick="copyLink()" style="display:none;">Copy Link</button>
+    <div id="title"></div>
+  </div>
+
+  <script>
+    let embedLink = "";
+
+    async function generateEmbed() {
+      const link = document.getElementById("dailymotionLink").value.trim();
+
+      // Supports both long and short Dailymotion URLs
+      const regex = /(?:dailymotion\.com\/video\/|dai\.ly\/)([a-zA-Z0-9]+)/;
+      const match = link.match(regex);
+
+      if (match && match[1]) {
+        const videoId = match[1];
+        embedLink = `https://geo.dailymotion.com/player/x110cm.html?video=${videoId}`;
+        
+        document.getElementById("output").innerHTML = 
+          `<strong>Embed Link:</strong><br><a href="${embedLink}" target="_blank">${embedLink}</a>`;
+        document.querySelector(".copy-btn").style.display = "block";
+
+        // Fetch video title
+        try {
+          const res = await fetch(`https://www.dailymotion.com/services/oembed?url=https://www.dailymotion.com/video/${videoId}`);
+          const data = await res.json();
+          document.getElementById("title").innerHTML = `🎬 Title: ${data.title}`;
+        } catch (e) {
+          document.getElementById("title").innerHTML = "⚠️ Could not fetch title.";
+        }
+
+      } else {
+        document.getElementById("output").innerHTML = "<span style='color:red'>Invalid Dailymotion link</span>";
+        document.querySelector(".copy-btn").style.display = "none";
+        document.getElementById("title").innerHTML = "";
+      }
+    }
+
+    function copyLink() {
+      if (embedLink) {
+        navigator.clipboard.writeText(embedLink).then(() => {
+          alert("Embed link copied!");
+        });
+      }
+    }
+  </script>
+</body>
+</html>

@@ -3,137 +3,195 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Donghua Post Creator</title>
+<title>Advanced Donghua Post Creator</title>
 
 <style>
+*{
+  box-sizing:border-box;
+}
+
 body{
-    background:#0f172a;
-    font-family:Arial, sans-serif;
-    color:#fff;
-    padding:20px;
+  margin:0;
+  font-family:Arial, sans-serif;
+  background:#0f172a;
+  color:#fff;
 }
-.container{
-    max-width:800px;
-    margin:auto;
+
+/* Layout */
+.wrapper{
+  display:flex;
+  min-height:100vh;
 }
-h2{
-    text-align:center;
-    margin-bottom:20px;
+
+.sidebar{
+  width:300px;
+  background:#111827;
+  padding:20px;
 }
-input, select, textarea{
+
+.main{
+  flex:1;
+  padding:25px;
+}
+
+/* Responsive */
+@media(max-width:900px){
+  .wrapper{
+    flex-direction:column;
+  }
+  .sidebar{
     width:100%;
-    padding:10px;
-    margin:8px 0;
-    border-radius:8px;
-    border:none;
-    background:#1e293b;
-    color:#fff;
+  }
 }
+
+/* Inputs */
+input, select{
+  width:100%;
+  padding:10px;
+  margin:8px 0;
+  background:#1e293b;
+  border:none;
+  border-radius:8px;
+  color:#fff;
+}
+
 button{
-    padding:10px 15px;
-    border:none;
-    border-radius:8px;
-    cursor:pointer;
-    margin-top:10px;
-    background:#2563eb;
-    color:#fff;
+  padding:10px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+  margin-top:10px;
+  width:100%;
+  background:#2563eb;
+  color:#fff;
 }
+
 button:hover{
-    background:#1d4ed8;
+  background:#1d4ed8;
 }
+
+/* Custom dropdown */
+select{
+  appearance:none;
+  background:#1e293b url("data:image/svg+xml;utf8,<svg fill='white' height='20' viewBox='0 0 20 20' width='20' xmlns='http://www.w3.org/2000/svg'><polygon points='0,0 20,0 10,10'/></svg>") no-repeat right 10px center;
+  background-size:12px;
+}
+
+/* Output */
 .output{
-    background:#111827;
-    padding:15px;
-    margin-top:20px;
-    border-radius:10px;
-    white-space:pre-wrap;
+  background:#111827;
+  padding:20px;
+  border-radius:12px;
+  white-space:pre-wrap;
+  min-height:300px;
+  font-size:15px;
 }
-.server-group{
-    display:flex;
-    gap:10px;
-}
-.server-group input{
-    flex:1;
-}
-.copy-btn{
-    background:#16a34a;
-}
-.copy-btn:hover{
-    background:#15803d;
+
+/* Custom Copy Notification */
+.toast{
+  position:fixed;
+  bottom:30px;
+  right:30px;
+  background:#16a34a;
+  padding:12px 20px;
+  border-radius:8px;
+  display:none;
+  font-weight:bold;
 }
 </style>
 </head>
 <body>
 
-<div class="container">
+<div class="wrapper">
 
-<h2>Telegram Post Creator</h2>
+<div class="sidebar">
+<h3>Post Settings</h3>
 
 <label>Title</label>
-<input type="text" id="title" placeholder="Throne of Seal">
+<input type="text" id="title">
 
-<label>Episode</label>
-<input type="text" id="episode" placeholder="198">
+<label>Episode (Example: 198 OR 33-40 OR 1,2,3)</label>
+<input type="text" id="episode">
 
 <label>Quality</label>
-<input type="text" id="quality" placeholder="4K">
+<input type="text" id="quality" value="4K">
 
 <label>Subtitle</label>
-<input type="text" id="subtitle" placeholder="English">
+<input type="text" id="subtitle" value="English">
 
-<label>Number of Servers</label>
+<label>Servers</label>
 <select id="serverCount" onchange="generateServerInputs()">
-    <option value="1">Single Server</option>
-    <option value="2">2 Servers</option>
-    <option value="3">3 Servers</option>
-    <option value="4">4 Servers</option>
+<option value="1">Single Server</option>
+<option value="2">2 Servers</option>
+<option value="3">3 Servers</option>
+<option value="4">4 Servers</option>
 </select>
 
 <div id="servers"></div>
 
 <button onclick="generatePost()">Generate Post</button>
-<button class="copy-btn" onclick="copyPost()">Copy</button>
-
-<div class="output" id="output"></div>
+<button onclick="copyPost()">Copy Post</button>
 
 </div>
 
+<div class="main">
+<h2>Live Preview</h2>
+<div class="output" id="output"></div>
+</div>
+
+</div>
+
+<div class="toast" id="toast">Post copied successfully</div>
+
 <script>
 
+/* Unicode converter */
 function unicodeText(text){
-    const normal="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-    const unicode="𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹𝖺𝖻𝖼𝖽𝖾𝖿𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟";
-    let result="";
-    for(let i=0;i<text.length;i++){
-        let index=normal.indexOf(text[i]);
-        result+= index!==-1 ? unicode[index] : text[i];
-    }
-    return result;
+const normal="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+const unicode="𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹𝖺𝖻𝖼𝖽𝖾𝖿𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟";
+let result="";
+for(let i=0;i<text.length;i++){
+let index=normal.indexOf(text[i]);
+result+= index!==-1 ? unicode[index] : text[i];
+}
+return result;
 }
 
+/* Generate server inputs */
 function generateServerInputs(){
-    let count=document.getElementById("serverCount").value;
-    let container=document.getElementById("servers");
-    container.innerHTML="";
-    for(let i=1;i<=count;i++){
-        container.innerHTML+=`
-            <div class="server-group">
-                <input type="text" id="server${i}" placeholder="Server ${i} Link">
-            </div>
-        `;
-    }
+let count=document.getElementById("serverCount").value;
+let container=document.getElementById("servers");
+container.innerHTML="";
+for(let i=1;i<=count;i++){
+container.innerHTML+=`<input type="text" id="server${i}" placeholder="Server ${i} Link">`;
 }
-
+}
 generateServerInputs();
 
-function generatePost(){
-    let title=unicodeText(document.getElementById("title").value);
-    let episode=document.getElementById("episode").value;
-    let quality=document.getElementById("quality").value;
-    let subtitle=document.getElementById("subtitle").value;
-    let count=document.getElementById("serverCount").value;
+/* Episode formatter */
+function formatEpisodes(ep){
+if(ep.includes("-")){
+let parts=ep.split("-");
+let start=parseInt(parts[0]);
+let end=parseInt(parts[1]);
+let list=[];
+for(let i=start;i<=end;i++){
+list.push(i);
+}
+return list.join(", ");
+}
+return ep;
+}
 
-    let post=`╭━━━━━━━━━━━━━━━➣
+/* Generate post */
+function generatePost(){
+let title=unicodeText(document.getElementById("title").value);
+let episode=formatEpisodes(document.getElementById("episode").value);
+let quality=document.getElementById("quality").value;
+let subtitle=document.getElementById("subtitle").value;
+let count=document.getElementById("serverCount").value;
+
+let post=`╭━━━━━━━━━━━━━━━➣
 ┣⪼ 𝖳ɪᴛʟᴇ : ${title}
 ┣⪼ 𝖤ᴘɪ𝗌ᴏᴅᴇ : ${episode}
 ┣⪼ 𝖰ᴜᴀʟɪᴛʏ : ${quality}
@@ -141,25 +199,28 @@ function generatePost(){
 ╰━━━━━━━━━━━━━━━➣
 `;
 
-    if(count==1){
-        let link=document.getElementById("server1").value;
-        post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣  ${link}`;
-    }else{
-        post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣
+if(count==1){
+let link=document.getElementById("server1").value;
+post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣  ${link}`;
+}else{
+post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣
 `;
-        for(let i=1;i<=count;i++){
-            let link=document.getElementById("server"+i).value;
-            post+=`➤ 𝖶𝖲 ${i} : ${link}\n\n`;
-        }
-    }
-
-    document.getElementById("output").textContent=post;
+for(let i=1;i<=count;i++){
+let link=document.getElementById("server"+i).value;
+post+=`➤ 𝖶𝖲 ${i} : ${link}\n\n`;
+}
 }
 
+document.getElementById("output").textContent=post;
+}
+
+/* Custom copy */
 function copyPost(){
-    let text=document.getElementById("output").textContent;
-    navigator.clipboard.writeText(text);
-    alert("Copied!");
+let text=document.getElementById("output").textContent;
+navigator.clipboard.writeText(text);
+let toast=document.getElementById("toast");
+toast.style.display="block";
+setTimeout(()=>{toast.style.display="none";},2000);
 }
 
 </script>

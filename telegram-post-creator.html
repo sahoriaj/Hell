@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Advanced Donghua Post Creator V3</title>
+<title>Donghua Post Creator</title>
 
 <style>
 *{box-sizing:border-box;}
 body{
   margin:0;
-  font-family:Arial;
+  font-family:Arial, sans-serif;
   background:#0f172a;
   color:#fff;
 }
@@ -65,6 +65,7 @@ button:hover{background:#1d4ed8;}
   padding:12px 20px;
   border-radius:8px;
   display:none;
+  font-weight:bold;
 }
 </style>
 </head>
@@ -77,10 +78,10 @@ button:hover{background:#1d4ed8;}
 <h3>Post Settings</h3>
 
 <label>Title</label>
-<input type="text" id="title">
+<input type="text" id="title" placeholder="Throne of Seal">
 
-<label>Episode (Example: 198 OR 33-40 OR 1,2,3)</label>
-<input type="text" id="episode">
+<label>Episode (198 OR 33-40 OR 1,2,3)</label>
+<input type="text" id="episode" placeholder="198">
 
 <label>Quality</label>
 <input type="text" id="quality" value="4K">
@@ -88,24 +89,24 @@ button:hover{background:#1d4ed8;}
 <label>Subtitle</label>
 <input type="text" id="subtitle" value="English">
 
+<label>Download</label>
+<select id="downloadToggle">
+<option value="disabled">Disabled</option>
+<option value="enabled">Enabled</option>
+</select>
+
 <h4>Watch Servers</h4>
 <select id="watchCount" onchange="generateWatchInputs()">
-<option value="1">1 Watch Server</option>
-<option value="2">2 Watch Servers</option>
-<option value="3">3 Watch Servers</option>
+<option value="1">Single Server</option>
+<option value="2">2 Servers</option>
+<option value="3">3 Servers</option>
+<option value="4">4 Servers</option>
 </select>
+
 <div id="watchServers"></div>
 
-<h4>Download Servers (Per Episode)</h4>
-<select id="downloadCount" onchange="generateDownloadInputs()">
-<option value="0">No Download</option>
-<option value="1">1 Download Server</option>
-<option value="2">2 Download Servers</option>
-</select>
-<div id="downloadServers"></div>
-
-<button onclick="generatePost()">Generate</button>
-<button onclick="copyPost()">Copy</button>
+<button onclick="generatePost()">Generate Post</button>
+<button onclick="copyPost()">Copy Post</button>
 
 </div>
 
@@ -116,11 +117,11 @@ button:hover{background:#1d4ed8;}
 
 </div>
 
-<div class="toast" id="toast">Copied Successfully</div>
+<div class="toast" id="toast">Post Copied Successfully</div>
 
 <script>
 
-/* Unicode */
+/* Unicode Converter */
 function unicodeText(text){
 const normal="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 const unicode="𝖠𝖡𝖢𝖣𝖤𝖥𝖦𝖧𝖨𝖩𝖪𝖫𝖬𝖭𝖮𝖯𝖰𝖱𝖲𝖳𝖴𝖵𝖶𝖷𝖸𝖹𝖺𝖻𝖼𝖽𝖾𝖿𝖌𝖍𝖎𝖏𝖐𝖑𝖒𝖓𝖔𝖕𝖖𝖗𝖘𝖙𝖚𝖛𝖜𝖝𝖞𝖟";
@@ -132,7 +133,7 @@ result+= index!==-1 ? unicode[index] : text[i];
 return result;
 }
 
-/* Episode parser */
+/* Episode Parser */
 function parseEpisodes(ep){
 if(ep.includes("-")){
 let parts=ep.split("-");
@@ -148,7 +149,7 @@ return ep.split(",").map(e=>e.trim());
 return [ep];
 }
 
-/* Generate Watch Inputs */
+/* Watch Inputs */
 function generateWatchInputs(){
 let count=document.getElementById("watchCount").value;
 let container=document.getElementById("watchServers");
@@ -159,17 +160,6 @@ container.innerHTML+=`<input type="text" id="watch${i}" placeholder="Watch Serve
 }
 generateWatchInputs();
 
-/* Generate Download Inputs */
-function generateDownloadInputs(){
-let count=document.getElementById("downloadCount").value;
-let container=document.getElementById("downloadServers");
-container.innerHTML="";
-for(let i=1;i<=count;i++){
-container.innerHTML+=`<input type="text" id="download${i}" placeholder="Download Server ${i} Base URL (use {ep} for episode)">`;
-}
-}
-generateDownloadInputs();
-
 /* Generate Post */
 function generatePost(){
 let title=unicodeText(document.getElementById("title").value);
@@ -177,37 +167,34 @@ let episodeInput=document.getElementById("episode").value;
 let episodes=parseEpisodes(episodeInput);
 let quality=document.getElementById("quality").value;
 let subtitle=document.getElementById("subtitle").value;
-
+let downloadStatus=document.getElementById("downloadToggle").value;
 let watchCount=document.getElementById("watchCount").value;
-let downloadCount=document.getElementById("downloadCount").value;
 
 let post=`╭━━━━━━━━━━━━━━━➣
 ┣⪼ 𝖳ɪᴛʟᴇ : ${title}
 ┣⪼ 𝖤ᴘɪ𝗌ᴏᴅᴇ : ${episodes.join(", ")}
 ┣⪼ 𝖰ᴜᴀʟɪᴛʏ : ${quality}
 ┣⪼ 𝖲ᴜʙᴛɪᴛʟᴇ : ${subtitle}
-╰━━━━━━━━━━━━━━━➣
 `;
 
+if(downloadStatus === "enabled"){
+post+=`┣⪼ 𝖣𝗈𝗐𝗇𝗅𝗈𝖺𝖽 : Added
+`;
+}
+
+post+=`╰━━━━━━━━━━━━━━━➣
+`;
+
+if(watchCount == 1){
+let link=document.getElementById("watch1").value;
+post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣  ${link}`;
+}else{
 post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣
 `;
-
 for(let i=1;i<=watchCount;i++){
 let link=document.getElementById("watch"+i).value;
 post+=`➤ 𝖶𝖲 ${i} : ${link}\n\n`;
 }
-
-if(downloadCount>0){
-post+=`⟢ 𝖣𝗈𝗐𝗇𝗅𝗈𝖺𝖽 ⟣
-`;
-episodes.forEach(ep=>{
-post+=`\n➤ 𝖤𝗉 ${ep}\n`;
-for(let i=1;i<=downloadCount;i++){
-let base=document.getElementById("download"+i).value;
-let finalLink=base.replace("{ep}",ep);
-post+=`   ➤ 𝖣𝖲 ${i} : ${finalLink}\n`;
-}
-});
 }
 
 document.getElementById("output").textContent=post;

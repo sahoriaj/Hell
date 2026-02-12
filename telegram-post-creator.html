@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Donghua Post Creator</title>
+<title>Donghua Multi Episode Post Generator</title>
 
 <style>
 *{box-sizing:border-box;}
@@ -18,7 +18,7 @@ body{
   min-height:100vh;
 }
 .sidebar{
-  width:320px;
+  width:340px;
   background:#111827;
   padding:20px;
 }
@@ -55,7 +55,7 @@ button:hover{background:#1d4ed8;}
   padding:20px;
   border-radius:12px;
   white-space:pre-wrap;
-  min-height:300px;
+  min-height:350px;
 }
 .toast{
   position:fixed;
@@ -67,6 +67,7 @@ button:hover{background:#1d4ed8;}
   display:none;
   font-weight:bold;
 }
+h3,h4{margin-top:15px;}
 </style>
 </head>
 <body>
@@ -78,13 +79,13 @@ button:hover{background:#1d4ed8;}
 <h3>Post Settings</h3>
 
 <label>Title</label>
-<input type="text" id="title" placeholder="Throne of Seal">
+<input type="text" id="title">
 
-<label>Episode (198 OR 33-40 OR 1,2,3)</label>
-<input type="text" id="episode" placeholder="198">
+<label>Episodes (198 OR 1,2,3 OR 33-40)</label>
+<input type="text" id="episode">
 
 <label>Quality</label>
-<input type="text" id="quality" value="4K">
+<input type="text" id="quality" value="1080P">
 
 <label>Subtitle</label>
 <input type="text" id="subtitle" value="English">
@@ -95,15 +96,21 @@ button:hover{background:#1d4ed8;}
 <option value="enabled">Enabled</option>
 </select>
 
-<h4>Watch Servers</h4>
-<select id="watchCount" onchange="generateWatchInputs()">
-<option value="1">Single Server</option>
-<option value="2">2 Servers</option>
-<option value="3">3 Servers</option>
-<option value="4">4 Servers</option>
+<label>Server Mode</label>
+<select id="serverMode">
+<option value="single">Single Server</option>
+<option value="multi">Multiple Servers</option>
 </select>
 
-<div id="watchServers"></div>
+<label>Server Count</label>
+<select id="serverCount" onchange="generateServerInputs()">
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+</select>
+
+<div id="servers"></div>
 
 <button onclick="generatePost()">Generate Post</button>
 <button onclick="copyPost()">Copy Post</button>
@@ -149,30 +156,34 @@ return ep.split(",").map(e=>e.trim());
 return [ep];
 }
 
-/* Watch Inputs */
-function generateWatchInputs(){
-let count=document.getElementById("watchCount").value;
-let container=document.getElementById("watchServers");
+/* Generate Server Inputs */
+function generateServerInputs(){
+let count=document.getElementById("serverCount").value;
+let container=document.getElementById("servers");
 container.innerHTML="";
 for(let i=1;i<=count;i++){
-container.innerHTML+=`<input type="text" id="watch${i}" placeholder="Watch Server ${i} Link">`;
+container.innerHTML+=`<input type="text" id="server${i}" placeholder="Server ${i} Base URL (use {ep} for multi)">`;
 }
 }
-generateWatchInputs();
+generateServerInputs();
 
 /* Generate Post */
 function generatePost(){
+
 let title=unicodeText(document.getElementById("title").value);
 let episodeInput=document.getElementById("episode").value;
 let episodes=parseEpisodes(episodeInput);
 let quality=document.getElementById("quality").value;
 let subtitle=document.getElementById("subtitle").value;
 let downloadStatus=document.getElementById("downloadToggle").value;
-let watchCount=document.getElementById("watchCount").value;
+let serverMode=document.getElementById("serverMode").value;
+let serverCount=document.getElementById("serverCount").value;
+
+let headerLabel = episodes.length > 1 ? "𝖤ᴘɪ𝗌ᴏᴅᴇ𝗌" : "𝖤ᴘɪ𝗌ᴏᴅᴇ";
 
 let post=`╭━━━━━━━━━━━━━━━➣
 ┣⪼ 𝖳ɪᴛʟᴇ : ${title}
-┣⪼ 𝖤ᴘɪ𝗌ᴏᴅᴇ : ${episodes.join(", ")}
+┣⪼ ${headerLabel} : ${episodes.join(", ")}
 ┣⪼ 𝖰ᴜᴀʟɪᴛʏ : ${quality}
 ┣⪼ 𝖲ᴜʙᴛɪᴛʟᴇ : ${subtitle}
 `;
@@ -183,18 +194,40 @@ post+=`┣⪼ 𝖣𝗈𝗐𝗇𝗅𝗈𝖺𝖽 : Added
 }
 
 post+=`╰━━━━━━━━━━━━━━━➣
+
+⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣
 `;
 
-if(watchCount == 1){
-let link=document.getElementById("watch1").value;
-post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣  ${link}`;
+/* Single Episode */
+if(episodes.length === 1){
+
+if(serverMode === "single"){
+let link=document.getElementById("server1").value.trim();
+if(link==="") link="Not Available";
+post+=`➤ 𝖤𝗉 ${episodes[0]} : ${link}`;
 }else{
-post+=`⟢ 𝖶𝖺𝗍𝖼𝗁 𝖧𝖾𝗋𝖾 ⟣
-`;
-for(let i=1;i<=watchCount;i++){
-let link=document.getElementById("watch"+i).value;
-post+=`➤ 𝖶𝖲 ${i} : ${link}\n\n`;
+for(let i=1;i<=serverCount;i++){
+let base=document.getElementById("server"+i).value.trim();
+if(base==="") base="Not Available";
+post+=`➤ 𝖶𝖲 ${i} : ${base}\n\n`;
 }
+}
+
+}else{
+
+/* Multiple Episodes */
+episodes.forEach(ep=>{
+post+=`\n➤ 𝖤𝗉 ${ep}:\n`;
+for(let i=1;i<=serverCount;i++){
+let base=document.getElementById("server"+i).value.trim();
+let finalLink="Not Available";
+if(base!==""){
+finalLink=base.replace("{ep}",ep);
+}
+post+=`   ➤ 𝖶𝖲 ${i} : ${finalLink}\n`;
+}
+});
+
 }
 
 document.getElementById("output").textContent=post;
